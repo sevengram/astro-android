@@ -82,8 +82,11 @@ public class GoogleLocator extends Locator implements LocationListener {
         case GPS:
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, gpsScanSpan,
                     MIN_DISTANCE, this);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                    networkScanSpan, MIN_DISTANCE, this);
+            try {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                        networkScanSpan, MIN_DISTANCE, this);
+            } catch (IllegalArgumentException e) {
+            }
             timeout = gpsTimeout;
             startTime = System.currentTimeMillis();
             break;

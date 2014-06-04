@@ -3,6 +3,7 @@ package com.mydeepsky.android.util;
 import java.io.File;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 
 public class DirManager {
@@ -25,7 +26,12 @@ public class DirManager {
 
     public static String getCachePath() {
         if (hasExternalStorage()) {
-            return sAppContext.getExternalCacheDir().getAbsolutePath();
+            if (Build.VERSION.SDK_INT >= 8) {
+                return sAppContext.getExternalCacheDir().getAbsolutePath();
+            } else {
+                return Environment.getExternalStorageDirectory() + "/Android/data/"
+                        + sAppContext.getPackageName() + "/cache";
+            }
         } else {
             return getPrivateCachePath();
         }
@@ -33,7 +39,12 @@ public class DirManager {
 
     public static String getFilesPath() {
         if (hasExternalStorage()) {
-            return sAppContext.getExternalFilesDir(null).getAbsolutePath();
+            if (Build.VERSION.SDK_INT >= 8) {
+                return sAppContext.getExternalFilesDir(null).getAbsolutePath();
+            } else {
+                return Environment.getExternalStorageDirectory() + "/Android/data/"
+                        + sAppContext.getPackageName() + "/files";
+            }
         } else {
             return getPrivateFilesPath();
         }
@@ -62,9 +73,13 @@ public class DirManager {
     }
 
     public static boolean hasExternalStorage() {
-        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
-                && sAppContext.getExternalCacheDir() != null
-                && sAppContext.getExternalFilesDir(null) != null;
+        if (Build.VERSION.SDK_INT < 8) {
+            return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+        } else {
+            return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
+                    && sAppContext.getExternalCacheDir() != null
+                    && sAppContext.getExternalFilesDir(null) != null;
+        }
     }
 
 }
