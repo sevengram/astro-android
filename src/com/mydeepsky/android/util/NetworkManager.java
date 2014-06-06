@@ -97,6 +97,16 @@ public class NetworkManager {
         }
     }
 
+    public static String getSimpleNetworkString() {
+        if (isWifiConnected()) {
+            return "wifi";
+        } else if (isFastMobileNetwork()) {
+            return "3g";
+        } else {
+            return "2g";
+        }
+    }
+
     public static boolean isFastMobileNetwork() {
         TelephonyManager telephonyManager = (TelephonyManager) sAppContext
                 .getSystemService(Context.TELEPHONY_SERVICE);
