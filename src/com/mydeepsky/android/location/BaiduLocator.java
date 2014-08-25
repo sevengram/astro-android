@@ -7,6 +7,7 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.location.LocationClientOption.LocationMode;
 import com.mydeepsky.android.util.NetworkManager;
 
 public class BaiduLocator extends Locator implements BDLocationListener {
@@ -49,8 +50,8 @@ public class BaiduLocator extends Locator implements BDLocationListener {
         this.locationClient = new LocationClient(context.getApplicationContext());
         LocationClientOption option = new LocationClientOption();
         option.setCoorType("bd09ll");
-        option.setAddrType("all");
-        option.setPriority(LocationClientOption.NetWorkFirst);
+        option.setIsNeedAddress(true);
+        option.setLocationMode(LocationMode.Hight_Accuracy);
         option.setScanSpan(networkScanSpan);
         retryTimes = networkRetryTimes;
         this.locationClient.setLocOption(option);
@@ -64,12 +65,10 @@ public class BaiduLocator extends Locator implements BDLocationListener {
             LocationClientOption option = locationClient.getLocOption();
             if (this.provider == Provider.GPS) {
                 option.setOpenGps(true);
-                option.setPriority(LocationClientOption.GpsFirst);
                 option.setScanSpan(gpsScanSpan);
                 retryTimes = gpsRetryTimes;
             } else {
                 option.setOpenGps(false);
-                option.setPriority(LocationClientOption.NetWorkFirst);
                 option.setScanSpan(networkScanSpan);
                 retryTimes = networkRetryTimes;
             }
@@ -127,11 +126,6 @@ public class BaiduLocator extends Locator implements BDLocationListener {
             }
             break;
         }
-    }
-
-    @Override
-    public void onReceivePoi(BDLocation arg0) {
-        // TODO Auto-generated method stub
     }
 
     @Override
