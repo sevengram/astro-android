@@ -2,7 +2,6 @@ package com.mydeepsky.android.location;
 
 import android.content.Context;
 import android.util.Log;
-
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -17,9 +16,9 @@ public class BaiduLocator extends Locator implements BDLocationListener {
 
     public static final int ID = 61;
 
-    private int gpsRetryTimes = 10;
+    private static final int GPS_RETRY_TIMES = 10;
 
-    private int networkRetryTimes = 5;
+    private static final int NETWORK_RETRY_TIMES = 5;
 
     private int retryCount = 0;
 
@@ -30,20 +29,16 @@ public class BaiduLocator extends Locator implements BDLocationListener {
     private LocationClient locationClient;
 
     @Override
-    public boolean setProvider() {
-        Provider newProvider;
+    public void setProvider() {
         if (NetworkManager.isGpsEnable()) {
-            newProvider = Provider.GPS;
+            this.provider = Provider.GPS;
         } else if (NetworkManager.isWifiAvailable()) {
-            newProvider = Provider.WIFI;
+            this.provider = Provider.WIFI;
         } else if (NetworkManager.isNetworkAvailable()) {
-            newProvider = Provider.MOBILE;
+            this.provider = Provider.MOBILE;
         } else {
-            newProvider = Provider.NONE;
+            this.provider = Provider.NONE;
         }
-        boolean result = (!newProvider.equals(this.provider));
-        this.provider = newProvider;
-        return result;
     }
 
     public BaiduLocator(Context context) {
@@ -53,7 +48,7 @@ public class BaiduLocator extends Locator implements BDLocationListener {
         option.setIsNeedAddress(true);
         option.setLocationMode(LocationMode.Hight_Accuracy);
         option.setScanSpan(networkScanSpan);
-        retryTimes = networkRetryTimes;
+        retryTimes = NETWORK_RETRY_TIMES;
         this.locationClient.setLocOption(option);
         this.locationClient.registerLocationListener(this);
     }
@@ -61,18 +56,22 @@ public class BaiduLocator extends Locator implements BDLocationListener {
     @Override
     public void start(Context context) {
         Log.d(TAG, "start");
-        if (setProvider()) {
-            LocationClientOption option = locationClient.getLocOption();
-            if (this.provider == Provider.GPS) {
-                option.setOpenGps(true);
-                option.setScanSpan(gpsScanSpan);
-                retryTimes = gpsRetryTimes;
-            } else {
+        LocationClientOption option = locationClient.getLocOption();
+        setProvider();
+        switch (this.provider) {
+            case WIFI:
+            case MOBILE:
                 option.setOpenGps(false);
                 option.setScanSpan(networkScanSpan);
-                retryTimes = networkRetryTimes;
-            }
-            locationClient.setLocOption(option);
+                retryTimes = NETWORK_RETRY_TIMES;
+                break;
+            case GPS:
+                option.setOpenGps(true);
+                option.setScanSpan(gpsScanSpan);
+                retryTimes = GPS_RETRY_TIMES;
+                break;
+            default:
+                break;
         }
         if (this.provider == Provider.NONE) {
             if (listener != null) {
@@ -80,8 +79,9 @@ public class BaiduLocator extends Locator implements BDLocationListener {
             }
             stop();
         } else {
-            retryCount = 0;
             startTime = System.currentTimeMillis();
+            locationClient.setLocOption(option);
+            retryCount = 0;
             locationClient.start();
         }
     }
@@ -99,32 +99,32 @@ public class BaiduLocator extends Locator implements BDLocationListener {
             return;
         LocationInfo result = new LocationInfo();
         switch (location.getLocType()) {
-        case BDLocation.TypeGpsLocation:
-        case BDLocation.TypeCacheLocation:
-        case BDLocation.TypeNetWorkLocation:
-        case BDLocation.TypeOffLineLocation:
-            result.setLongitude(location.getLongitude());
-            result.setLatitude(location.getLatitude());
-            result.setCountry(DEFAULT_COUNTRY_ZH);
-            result.setProvince(location.getProvince());
-            result.setCity(location.getCity());
-            result.setDistrict(location.getDistrict());
-            result.setDetail(location.getAddrStr());
-            Log.d(TAG, "Addr: " + location.getAddrStr());
-            long costTime = startTime > 0 ? System.currentTimeMillis() - startTime : -1;
-            startTime = -1;
-            if (listener != null)
-                listener.onLocationUpdate(result, costTime, ID);
-            stop();
-            break;
-        default:
-            retryCount++;
-            if (retryCount > retryTimes) {
+            case BDLocation.TypeGpsLocation:
+            case BDLocation.TypeCacheLocation:
+            case BDLocation.TypeNetWorkLocation:
+            case BDLocation.TypeOffLineLocation:
+                result.setLongitude(location.getLongitude());
+                result.setLatitude(location.getLatitude());
+                result.setCountry(DEFAULT_COUNTRY_ZH);
+                result.setProvince(location.getProvince());
+                result.setCity(location.getCity());
+                result.setDistrict(location.getDistrict());
+                result.setDetail(location.getAddrStr());
+                Log.d(TAG, "Addr: " + location.getAddrStr());
+                long costTime = startTime > 0 ? System.currentTimeMillis() - startTime : -1;
+                startTime = -1;
                 if (listener != null)
-                    listener.onLocationError(true);
+                    listener.onLocationUpdate(result, costTime, ID);
                 stop();
-            }
-            break;
+                break;
+            default:
+                retryCount++;
+                if (retryCount > retryTimes) {
+                    if (listener != null)
+                        listener.onLocationError(true);
+                    stop();
+                }
+                break;
         }
     }
 

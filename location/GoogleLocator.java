@@ -1,22 +1,17 @@
 package com.mydeepsky.android.location;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.content.Context;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.location.*;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-
 import com.mydeepsky.android.util.NetworkManager;
 import com.mydeepsky.android.util.StringUtil;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GoogleLocator extends Locator implements LocationListener {
     static final String TAG = "GoogleLocator";
@@ -29,15 +24,15 @@ public class GoogleLocator extends Locator implements LocationListener {
 
     private static final int MAX_GEOCODER_RESULTS = 5;
 
+    private static final int GPS_TIMEOUT = 300000;
+
+    private static final int NETWORK_TIMEOUT = 30000;
+
     private LocationManager locationManager;
 
     private Geocoder geocoder;
 
     private Timer timer;
-
-    private int gpsTimeout = 300000;
-
-    private int networkTimeout = 30000;
 
     private long startTime = -1;
 
@@ -49,22 +44,18 @@ public class GoogleLocator extends Locator implements LocationListener {
     }
 
     @Override
-    public boolean setProvider() {
-        Provider newProvider;
+    public void setProvider() {
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            newProvider = Provider.GPS;
-        } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-                && NetworkManager.isWifiAvailable()) {
-            newProvider = Provider.WIFI;
-        } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-                && NetworkManager.isNetworkAvailable()) {
-            newProvider = Provider.MOBILE;
+            this.provider = Provider.GPS;
+        } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && NetworkManager
+            .isWifiAvailable()) {
+            this.provider = Provider.WIFI;
+        } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && NetworkManager
+            .isNetworkAvailable()) {
+            this.provider = Provider.MOBILE;
         } else {
-            newProvider = Provider.NONE;
+            this.provider = Provider.NONE;
         }
-        boolean result = (!newProvider.equals(this.provider));
-        this.provider = newProvider;
-        return result;
     }
 
     @Override
@@ -72,26 +63,24 @@ public class GoogleLocator extends Locator implements LocationListener {
         Log.d(TAG, "start");
         setProvider();
         switch (this.provider) {
-        case WIFI:
-        case MOBILE:
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                    networkScanSpan, MIN_DISTANCE, this);
-            timeout = networkTimeout;
-            startTime = System.currentTimeMillis();
-            break;
-        case GPS:
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, gpsScanSpan,
-                    MIN_DISTANCE, this);
-            try {
+            case WIFI:
+            case MOBILE:
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    networkScanSpan, MIN_DISTANCE, this);
+                timeout = NETWORK_TIMEOUT;
+                break;
+            case GPS:
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, gpsScanSpan,
+                    MIN_DISTANCE, this);
+                try {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                         networkScanSpan, MIN_DISTANCE, this);
-            } catch (IllegalArgumentException e) {
-            }
-            timeout = gpsTimeout;
-            startTime = System.currentTimeMillis();
-            break;
-        default:
-            break;
+                } catch (IllegalArgumentException ignored) {
+                }
+                timeout = GPS_TIMEOUT;
+                break;
+            default:
+                break;
         }
         if (this.provider == Provider.NONE) {
             if (listener != null) {
@@ -99,6 +88,7 @@ public class GoogleLocator extends Locator implements LocationListener {
             }
             stop();
         } else {
+            startTime = System.currentTimeMillis();
             timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
@@ -123,13 +113,13 @@ public class GoogleLocator extends Locator implements LocationListener {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-            case MSG_TIMEOUT:
-                if (listener != null)
-                    listener.onLocationError(true);
-                stop();
-                break;
-            default:
-                break;
+                case MSG_TIMEOUT:
+                    if (listener != null)
+                        listener.onLocationError(true);
+                    stop();
+                    break;
+                default:
+                    break;
             }
         }
     };
@@ -144,9 +134,9 @@ public class GoogleLocator extends Locator implements LocationListener {
         result.setLongitude(location.getLongitude());
         try {
             Address address = geocoder.getFromLocation(location.getLatitude(),
-                    location.getLongitude(), MAX_GEOCODER_RESULTS).get(0);
+                location.getLongitude(), MAX_GEOCODER_RESULTS).get(0);
             Log.d(TAG, address.toString());
-            StringBuffer stringBuffer = new StringBuffer();
+            StringBuilder stringBuffer = new StringBuilder();
             for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
                 stringBuffer.append(address.getAddressLine(i)).append(' ');
             }
@@ -189,8 +179,8 @@ public class GoogleLocator extends Locator implements LocationListener {
 
     @Override
     public boolean isAvailable() {
-        return (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && NetworkManager
-                .isNetworkAvailable())
+        return
+            (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && NetworkManager.isNetworkAvailable())
                 || locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 }

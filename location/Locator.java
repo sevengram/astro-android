@@ -11,7 +11,7 @@ public abstract class Locator {
 
     public enum Provider {
         GPS, WIFI, MOBILE, NONE
-    };
+    }
 
     protected int gpsScanSpan = 20000;
 
@@ -19,11 +19,11 @@ public abstract class Locator {
 
     protected OnLocationUpdateListener listener;
 
-    protected Provider provider = Provider.MOBILE;
+    protected Provider provider = Provider.NONE;
 
     public abstract boolean isAvailable();
 
-    public abstract boolean setProvider();
+    public abstract void setProvider();
 
     public abstract void start(Context context);
 
@@ -118,8 +118,7 @@ public abstract class Locator {
 
         @Override
         public String toString() {
-            String result = new StringBuffer().append(province).append(',').append(city)
-                    .append(',').append(district).toString();
+            String result = province + ',' + city + ',' + district;
             return result.equals(",,") ? "Unknown" : result;
         }
 

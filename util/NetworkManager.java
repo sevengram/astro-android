@@ -27,58 +27,38 @@ public class NetworkManager {
 
     public static boolean isNetworkConnected() {
         ConnectivityManager connectivityManager = (ConnectivityManager) sAppContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null) {
-            return networkInfo.isConnected();
-        } else {
-            return false;
-        }
+        return networkInfo != null && networkInfo.isConnected();
     }
 
     public static boolean isWifiConnected() {
         ConnectivityManager connectivityManager = (ConnectivityManager) sAppContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (networkInfo != null) {
-            return networkInfo.isConnected();
-        } else {
-            return false;
-        }
+        return networkInfo != null && networkInfo.isConnected();
     }
 
     public static boolean isMobileConnected() {
         ConnectivityManager connectivityManager = (ConnectivityManager) sAppContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager
-                .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (networkInfo != null) {
-            return networkInfo.isConnected();
-        } else {
-            return false;
-        }
+            .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        return networkInfo != null && networkInfo.isConnected();
     }
 
     public static boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) sAppContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null) {
-            return networkInfo.isAvailable();
-        } else {
-            return false;
-        }
+        return networkInfo != null && networkInfo.isAvailable();
     }
 
     public static boolean isWifiAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) sAppContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (networkInfo != null) {
-            return networkInfo.isAvailable();
-        } else {
-            return false;
-        }
+        return networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected();
     }
 
     public static boolean isGpsEnable() {
@@ -149,5 +129,4 @@ public class NetworkManager {
             return false;
         }
     }
-
 }
