@@ -14,7 +14,7 @@ import android.util.Base64;
 public class EncryptUtil {
     private static final String ALGORITHM = "AES";
 
-    public final static String md5(String s) {
+    public static String md5(String s) {
         char hex[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
                 'f' };
         try {
@@ -25,14 +25,13 @@ public class EncryptUtil {
             int j = md.length;
             char str[] = new char[j * 2];
             int k = 0;
-            for (int i = 0; i < j; i++) {
-                byte byte0 = md[i];
+            for (byte byte0 : md) {
                 str[k++] = hex[byte0 >>> 4 & 0xf];
                 str[k++] = hex[byte0 & 0xf];
             }
             return new String(str);
         } catch (NoSuchAlgorithmException e) {
-            return null;
+            return "";
         }
     }
 
@@ -73,15 +72,13 @@ public class EncryptUtil {
         SecretKeySpec skeySpec = new SecretKeySpec(raw, ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-        byte[] encrypted = cipher.doFinal(clear);
-        return encrypted;
+        return cipher.doFinal(clear);
     }
 
     private static byte[] decrypt(byte[] raw, byte[] encrypted) throws Exception {
         SecretKeySpec skeySpec = new SecretKeySpec(raw, ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, skeySpec);
-        byte[] decrypted = cipher.doFinal(encrypted);
-        return decrypted;
+        return cipher.doFinal(encrypted);
     }
 }
